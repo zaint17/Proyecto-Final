@@ -1,0 +1,110 @@
+<div class="min-h-screen flex flex-col lg:grid lg:grid-cols-2" style="background:var(--bg)">
+
+  <!-- LEFT branding — oculto en móvil, visible desde lg -->
+  <div class="hidden lg:flex flex-col justify-center px-12 xl:px-20 py-12"
+       style="background:var(--bg2);border-right:1px solid var(--border)">
+    <div class="max-w-md">
+
+      <div class="flex items-center gap-3 mb-12">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center"
+             style="background:linear-gradient(135deg,var(--accent),var(--purple))">
+          <lucide-icon [img]="Headset" size="22" style="color:#fff" aria-hidden="true"></lucide-icon>
+        </div>
+        <div>
+          <div class="text-2xl font-bold" style="font-family:'Syne',sans-serif;letter-spacing:-.5px">
+            LUR<span style="color:var(--accent)">ESA</span>
+          </div>
+          <div class="text-xs" style="color:var(--muted);letter-spacing:.6px;text-transform:uppercase">
+            Soporte Técnico
+          </div>
+        </div>
+      </div>
+
+      <h2 class="text-3xl font-bold leading-tight mb-4" style="font-family:'Syne',sans-serif">
+        Gestiona el soporte técnico de forma eficiente
+      </h2>
+      <p class="text-base leading-relaxed mb-10" style="color:var(--muted)">
+        Crea, asigna y da seguimiento a tickets de soporte desde un solo panel centralizado.
+      </p>
+
+      <div class="flex flex-col gap-3">
+        @for (f of features; track f.text) {
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+               style="background:var(--bg3);border:1px solid var(--border);color:var(--muted)">
+            <span>{{ f.icon }}</span><span>{{ f.text }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT formulario -->
+  <div class="flex flex-col items-center justify-center flex-1 px-6 py-12">
+
+    <!-- Logo solo en móvil -->
+    <div class="flex items-center gap-2 mb-8 lg:hidden">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+           style="background:linear-gradient(135deg,var(--accent),var(--purple))">
+        <lucide-icon [img]="Headset" size="18" style="color:#fff" aria-hidden="true"></lucide-icon>
+      </div>
+      <span class="text-xl font-bold" style="font-family:'Syne',sans-serif">
+        LUR<span style="color:var(--accent)">ESA</span>
+      </span>
+    </div>
+
+    <div class="w-full max-w-sm">
+
+      <h2 class="text-2xl font-bold mb-1" style="font-family:'Syne',sans-serif">Bienvenido 👋</h2>
+      <p class="text-sm mb-7" style="color:var(--muted)">Inicia sesión para acceder al sistema</p>
+
+      @if (error()) {
+        <div class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm mb-5"
+             style="background:#EF444420;border:1px solid #EF444430;color:#FCA5A5">
+          ⚠️ {{ error() }}
+        </div>
+      }
+
+      <div class="flex flex-col gap-4">
+
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted);letter-spacing:.3px">
+            Correo electrónico
+          </label>
+          <input type="email" placeholder="correo@luresa.com" class="input-base"
+            [value]="email()" (input)="email.set($any($event.target).value)" />
+        </div>
+
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted);letter-spacing:.3px">
+            Contraseña
+          </label>
+          <div class="relative">
+            <input [type]="showPassword() ? 'text' : 'password'"
+              placeholder="••••••••" class="input-base" style="padding-right:42px"
+              [value]="password()"
+              (input)="password.set($any($event.target).value)"
+              (keydown.enter)="login()" />
+            <button type="button"
+              class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center"
+              style="background:none;border:none;color:var(--muted);cursor:pointer"
+              (click)="showPassword.set(!showPassword())">
+              @if (showPassword()) {
+                <lucide-icon [img]="EyeOff" size="16" aria-hidden="true"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="Eye" size="16" aria-hidden="true"></lucide-icon>
+              }
+            </button>
+          </div>
+        </div>
+
+        <button (click)="login()" [disabled]="cargando()"
+          class="btn-primary w-full justify-center mt-1" style="padding:12px;font-size:14px">
+          <lucide-icon [img]="LogIn" size="15" aria-hidden="true"></lucide-icon>
+          {{ cargando() ? 'Ingresando...' : 'Iniciar sesión' }}
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+</div>

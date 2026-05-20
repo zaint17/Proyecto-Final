@@ -1,0 +1,65 @@
+<aside class="flex flex-col h-full w-56 py-5 px-3"
+       style="background:var(--bg2);border-right:1px solid var(--border)">
+
+  <!-- Brand -->
+  <div class="px-2 pb-6">
+    <div class="text-xl font-bold" style="font-family:'Syne',sans-serif;letter-spacing:-0.5px">
+      LUR<span style="color:var(--accent)">ESA</span>
+    </div>
+    <div class="text-xs mt-0.5" style="color:var(--muted);letter-spacing:.7px;text-transform:uppercase">
+      Soporte Técnico
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex flex-col gap-0.5 flex-1">
+
+    <div class="text-xs px-2 pb-2 font-medium" style="color:var(--muted);letter-spacing:.7px;text-transform:uppercase">
+      Principal
+    </div>
+
+    <a routerLink="/app/dashboard" routerLinkActive="active-link"
+       class="nav-item" (click)="navegarY()">
+      <lucide-icon [img]="LayoutDashboard" size="15" aria-hidden="true"></lucide-icon>
+      Dashboard
+    </a>
+
+    <a routerLink="/app/tickets" routerLinkActive="active-link"
+       class="nav-item" (click)="navegarY()">
+      <lucide-icon [img]="Ticket" size="15" aria-hidden="true"></lucide-icon>
+      Tickets
+    </a>
+
+    @if (auth.esAdmin()) {
+      <div class="text-xs px-2 pt-4 pb-2 font-medium" style="color:var(--muted);letter-spacing:.7px;text-transform:uppercase">
+        Administración
+      </div>
+      <a routerLink="/app/usuarios" routerLinkActive="active-link"
+         class="nav-item" (click)="navegarY()">
+        <lucide-icon [img]="Users" size="15" aria-hidden="true"></lucide-icon>
+        Técnicos
+      </a>
+    }
+
+  </nav>
+
+  <!-- Footer -->
+  @if (auth.usuario(); as user) {
+    <div class="pt-4 mt-4" style="border-top:1px solid var(--border)">
+      <div class="flex items-center gap-2 mb-3 px-1">
+        <div class="avatar text-xs">{{ user.nombre.slice(0,2).toUpperCase() }}</div>
+        <div class="min-w-0">
+          <div class="text-sm font-medium truncate">{{ user.nombre }}</div>
+          <div class="text-xs" style="color:var(--muted)">
+            {{ user.rol === 1 ? 'Administrador' : 'Técnico' }}
+          </div>
+        </div>
+      </div>
+      <button (click)="auth.logout()" class="btn-danger w-full justify-center" style="padding:8px">
+        <lucide-icon [img]="LogOut" size="13" aria-hidden="true"></lucide-icon>
+        Cerrar sesión
+      </button>
+    </div>
+  }
+
+</aside>

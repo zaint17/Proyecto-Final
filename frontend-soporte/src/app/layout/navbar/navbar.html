@@ -1,0 +1,26 @@
+<header class="flex items-center justify-between px-4 md:px-6 py-3.5"
+        style="background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0">
+
+  <!-- Hamburguesa — solo en móvil -->
+  <button class="md:hidden btn-ghost p-2 mr-2" (click)="toggleSidebar.emit()" aria-label="Menú">
+    <lucide-icon [img]="Menu" size="18" aria-hidden="true"></lucide-icon>
+  </button>
+
+  <!-- Título -->
+  <span class="font-semibold text-sm hidden sm:block" style="font-family:'Syne',sans-serif">
+    Sistema de Soporte — LURESA
+  </span>
+  <span class="font-semibold text-sm sm:hidden" style="font-family:'Syne',sans-serif;color:var(--accent)">
+    LURESA
+  </span>
+
+  <!-- Acciones -->
+  <div class="flex items-center gap-2 ml-auto">
+    <a routerLink="/app/tickets/nuevo" class="btn-primary text-xs px-3 py-2 md:px-4 md:py-2 md:text-sm">
+      <lucide-icon [img]="Plus" size="14" aria-hidden="true"></lucide-icon>
+      <span class="hidden sm:inline">Nuevo ticket</span>
+      <span class="sm:hidden">Nuevo</span>
+    </a>
+  </div>
+
+</header>

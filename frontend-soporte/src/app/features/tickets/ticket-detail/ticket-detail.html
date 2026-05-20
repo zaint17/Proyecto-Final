@@ -1,0 +1,191 @@
+@if (cargando()) {
+  <div class="text-center py-20" style="color:var(--muted)">⏳ Cargando ticket...</div>
+}
+@if (error()) {
+  <div class="mx-4 sm:mx-6 mt-6 px-4 py-3 rounded-xl text-sm"
+       style="background:#EF444420;border:1px solid #EF444430;color:#FCA5A5">
+    ⚠️ {{ error() }}
+  </div>
+}
+
+@if (!cargando() && ticket(); as t) {
+<div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-2 mb-5 flex-wrap">
+    <a routerLink="/app/tickets" class="btn-ghost p-2">
+      <lucide-icon [img]="ArrowLeft" size="14" aria-hidden="true"></lucide-icon>
+    </a>
+    <span class="text-sm" style="color:var(--muted)">Tickets</span>
+    <span style="color:var(--border2)">/</span>
+    <span class="text-sm">Ticket #{{ t.id }}</span>
+    <span [class]="chipClass(t.estado)" class="ml-1">
+      <span class="chip-dot"></span>{{ t.estado }}
+    </span>
+  </div>
+
+  <!-- Grid: apilado en móvil, 2 col en xl -->
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5">
+
+    <!-- Columna principal -->
+    <div class="xl:col-span-2 flex flex-col gap-4">
+
+      <!-- Info ticket -->
+      <div class="card">
+        <h1 class="text-lg sm:text-xl font-bold mb-2">{{ t.titulo }}</h1>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--muted)">{{ t.descripcion }}</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs px-3 py-1 rounded-full" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted)">
+            📁 {{ t.categoria }}
+          </span>
+          <span class="prio {{ t.prioridad.toLowerCase() }}">{{ t.prioridad }}</span>
+          <span class="text-xs px-3 py-1 rounded-full" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted)">
+            📅 {{ t.fecha_limite | date:'dd/MM/yyyy' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="card p-0 flex flex-col overflow-hidden" style="height:380px;min-height:320px">
+
+        <div class="flex items-center gap-2 px-4 py-3" style="border-bottom:1px solid var(--border)">
+          <lucide-icon [img]="MessageSquare" size="14" aria-hidden="true" style="color:var(--accent)"></lucide-icon>
+          <span class="text-sm font-semibold">Respuestas</span>
+          <span class="ml-auto text-xs" style="color:var(--muted)">{{ respuestas().length }} mensaje(s)</span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-2">
+          @if (respuestas().length === 0) {
+            <div class="m-auto text-center text-sm" style="color:var(--muted)">
+              Sin respuestas aún.
+            </div>
+          }
+          @for (msg of respuestas(); track msg.id) {
+            <div class="flex" [class.justify-end]="esTecnico(msg.rol_id)">
+              <div class="max-w-[80%] sm:max-w-[70%] p-3 rounded-2xl text-sm"
+                   [style.background]="esTecnico(msg.rol_id) ? 'var(--accent2)' : 'var(--bg3)'"
+                   [style.border]="esTecnico(msg.rol_id) ? 'none' : '1px solid var(--border)'">
+                <div class="text-xs font-semibold mb-1 opacity-75">{{ msg.usuario }}</div>
+                <div class="leading-relaxed">{{ msg.mensaje }}</div>
+                <div class="text-right text-xs mt-1.5 opacity-50">{{ msg.fecha | date:'dd/MM HH:mm' }}</div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="p-3 flex gap-2" style="border-top:1px solid var(--border)">
+          <input type="text" placeholder="Escribe una respuesta..."
+            class="input-base flex-1 text-sm"
+            [value]="nuevoMsg()"
+            (input)="nuevoMsg.set($any($event.target).value)"
+            (keydown.enter)="enviarMensaje()" />
+          <button (click)="enviarMensaje()"
+            [disabled]="enviando() || !nuevoMsg().trim()"
+            class="btn-primary px-3">
+            <lucide-icon [img]="Send" size="14" aria-hidden="true"></lucide-icon>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Columna lateral -->
+    <div class="flex flex-col gap-4">
+
+      <!-- Cliente -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
+          <lucide-icon [img]="User" size="13" aria-hidden="true" style="color:var(--purple)"></lucide-icon>
+          <span class="text-xs font-semibold" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Cliente</span>
+        </div>
+        <!-- Grid de 2 cols en sm (cuando está apilado), 1 col en xl -->
+        <div class="grid grid-cols-2 xl:grid-cols-1 gap-3 text-sm">
+          <div>
+            <div class="text-xs mb-1" style="color:var(--muted)">Nombre</div>
+            <div class="font-medium text-sm">{{ t.cliente_nombre }}</div>
+          </div>
+          @if (t.cliente_dni) {
+            <div>
+              <div class="text-xs mb-1" style="color:var(--muted)">DNI</div>
+              <div class="text-sm">{{ t.cliente_dni }}</div>
+            </div>
+          }
+          @if (t.cliente_telefono) {
+            <div>
+              <div class="text-xs mb-1" style="color:var(--muted)">Teléfono</div>
+              <div class="text-sm">{{ t.cliente_telefono }}</div>
+            </div>
+          }
+          @if (t.cliente_email) {
+            <div>
+              <div class="text-xs mb-1" style="color:var(--muted)">Email</div>
+              <div class="text-sm" style="color:var(--accent)">{{ t.cliente_email }}</div>
+            </div>
+          }
+          @if (t.cliente_direccion) {
+            <div class="col-span-2 xl:col-span-1">
+              <div class="text-xs mb-1" style="color:var(--muted)">Dirección</div>
+              <div class="text-sm" style="color:var(--muted)">{{ t.cliente_direccion }}</div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Técnico -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-3 pb-3" style="border-bottom:1px solid var(--border)">
+          <lucide-icon [img]="Wrench" size="13" aria-hidden="true" style="color:var(--warn)"></lucide-icon>
+          <span class="text-xs font-semibold" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Técnico</span>
+        </div>
+        <div class="text-sm font-medium">{{ t.tecnico ?? '— Sin asignar' }}</div>
+      </div>
+
+      <!-- Acciones admin -->
+      @if (auth.esAdmin()) {
+        <div class="card">
+          <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
+            <lucide-icon [img]="UserCheck" size="13" aria-hidden="true" style="color:var(--success)"></lucide-icon>
+            <span class="text-xs font-semibold" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Acciones</span>
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="block text-xs mb-1.5" style="color:var(--muted)">Asignar técnico</label>
+              <select class="input-base mb-2 text-sm"
+                (change)="tecnicoSeleccionado.set(+$any($event.target).value)">
+                <option value="0">Seleccionar...</option>
+                @for (tec of tecnicos(); track tec.id) {
+                  <option [value]="tec.id">{{ tec.nombre }}</option>
+                }
+              </select>
+              <button (click)="asignarTecnico()" [disabled]="!tecnicoSeleccionado()"
+                class="btn-primary w-full justify-center text-sm">
+                <lucide-icon [img]="UserCheck" size="13" aria-hidden="true"></lucide-icon>
+                Asignar
+              </button>
+            </div>
+
+            <div>
+              <label class="block text-xs mb-1.5" style="color:var(--muted)">Cambiar estado</label>
+              <select class="input-base mb-2 text-sm"
+                (change)="estadoSeleccionado.set(+$any($event.target).value)">
+                @for (est of estados; track est.id) {
+                  <option [value]="est.id" [selected]="est.id === t.estado_id">{{ est.nombre }}</option>
+                }
+              </select>
+              <button (click)="cambiarEstado()"
+                class="btn-ghost w-full justify-center text-sm">
+                <lucide-icon [img]="RefreshCw" size="13" aria-hidden="true"></lucide-icon>
+                Actualizar estado
+              </button>
+            </div>
+          </div>
+
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>
+}

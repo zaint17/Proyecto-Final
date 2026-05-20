@@ -1,0 +1,104 @@
+<div class="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-6">
+    <a routerLink="/app/tickets" class="btn-ghost p-2">
+      <lucide-icon [img]="ArrowLeft" size="15" aria-hidden="true"></lucide-icon>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold mb-0.5">Nuevo Ticket</h1>
+      <p class="text-xs sm:text-sm" style="color:var(--muted)">Registra una nueva solicitud de soporte técnico</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="px-4 py-3 rounded-xl text-sm mb-4"
+         style="background:#EF444420;border:1px solid #EF444430;color:#FCA5A5">
+      ⚠️ {{ error() }}
+    </div>
+  }
+
+  <div class="flex flex-col gap-4">
+
+    <!-- Datos del ticket -->
+    <div class="card">
+      <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
+        <lucide-icon [img]="FileText" size="14" aria-hidden="true" style="color:var(--accent)"></lucide-icon>
+        <h2 class="text-xs font-semibold" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">
+          Datos del ticket
+        </h2>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Título *</label>
+          <input type="text" [(ngModel)]="form.titulo" class="input-base"
+            placeholder="Ej: PC no enciende en área contabilidad" />
+        </div>
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Descripción *</label>
+          <textarea [(ngModel)]="form.descripcion" rows="3" class="input-base"
+            style="resize:none" placeholder="Describe el problema con detalle..."></textarea>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs mb-1.5" style="color:var(--muted)">Categoría *</label>
+            <select [(ngModel)]="form.categoria_id" class="input-base">
+              <option [value]="0" disabled>Selecciona categoría</option>
+              @for (cat of categorias(); track cat.id) {
+                <option [value]="cat.id">{{ cat.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs mb-1.5" style="color:var(--muted)">URL de video (opcional)</label>
+            <input type="url" [(ngModel)]="form.video_url" class="input-base" placeholder="https://youtube.com/..." />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos del cliente -->
+    <div class="card">
+      <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
+        <lucide-icon [img]="User" size="14" aria-hidden="true" style="color:var(--purple)"></lucide-icon>
+        <h2 class="text-xs font-semibold" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">
+          Datos del cliente
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Nombre completo *</label>
+          <input type="text" [(ngModel)]="form.cliente_nombre" class="input-base" placeholder="Nombre completo" />
+        </div>
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">DNI</label>
+          <input type="text" [(ngModel)]="form.cliente_dni" class="input-base" placeholder="12345678" />
+        </div>
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Teléfono</label>
+          <input type="text" [(ngModel)]="form.cliente_telefono" class="input-base" placeholder="987654321" />
+        </div>
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Email</label>
+          <input type="email" [(ngModel)]="form.cliente_email" class="input-base" placeholder="cliente@correo.com" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Dirección</label>
+          <input type="text" [(ngModel)]="form.cliente_direccion" class="input-base" placeholder="Av. Lima 123" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="flex gap-3">
+      <button (click)="guardar()" [disabled]="cargando()" class="btn-primary flex-1 sm:flex-none justify-center">
+        <lucide-icon [img]="Save" size="14" aria-hidden="true"></lucide-icon>
+        {{ cargando() ? 'Guardando...' : 'Crear ticket' }}
+      </button>
+      <a routerLink="/app/tickets" class="btn-ghost flex-1 sm:flex-none justify-center">Cancelar</a>
+    </div>
+
+  </div>
+</div>

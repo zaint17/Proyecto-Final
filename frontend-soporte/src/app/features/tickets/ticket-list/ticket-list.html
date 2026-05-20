@@ -1,0 +1,97 @@
+<div class="p-4 sm:p-6 lg:p-8" style="max-width:100%">
+
+  <!-- Header -->
+  <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold flex items-center gap-2 mb-1">
+        <lucide-icon [img]="TicketIcon" size="22" aria-hidden="true" style="color:var(--accent)"></lucide-icon>
+        Tickets
+      </h1>
+      <p class="text-sm" style="color:var(--muted)">{{ filteredTickets().length }} resultado(s)</p>
+    </div>
+
+    <!-- Controles en una sola fila -->
+    <div class="flex items-center gap-2 flex-wrap">
+
+      <div class="relative">
+        <lucide-icon [img]="Search" size="13" aria-hidden="true"
+          class="absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)">
+        </lucide-icon>
+        <input type="text" placeholder="Buscar..."
+          class="input-base text-sm pl-8" style="width:200px"
+          (input)="search.set($any($event.target).value)" />
+      </div>
+
+      <select class="input-base text-sm" style="width:auto"
+        (change)="filtroEstado.set($any($event.target).value)">
+        <option value="">Todos los estados</option>
+        <option value="Abierto">Abierto</option>
+        <option value="En progreso">En progreso</option>
+        <option value="Resuelto">Resuelto</option>
+        <option value="Cerrado">Cerrado</option>
+      </select>
+
+      <button (click)="cargarTickets()" class="btn-ghost" style="padding:9px 12px">
+        <lucide-icon [img]="RefreshCw" size="14" aria-hidden="true"></lucide-icon>
+      </button>
+
+      <a routerLink="/app/tickets/nuevo" class="btn-primary">
+        <lucide-icon [img]="Plus" size="14" aria-hidden="true"></lucide-icon>
+        Nuevo ticket
+      </a>
+
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="text-center py-20 text-lg" style="color:var(--muted)">Cargando tickets...</div>
+  }
+
+  @if (error()) {
+    <div class="flex justify-between items-center px-5 py-4 rounded-xl text-sm mb-4"
+         style="background:#EF444420;border:1px solid #EF444430;color:#FCA5A5">
+      <span>⚠️ {{ error() }}</span>
+      <button (click)="cargarTickets()"
+        style="background:none;border:none;color:#FCA5A5;cursor:pointer;text-decoration:underline">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (!cargando() && !error()) {
+    <div class="card p-0 overflow-hidden w-full">
+      <div class="overflow-x-auto">
+        <table class="tbl" style="min-width:640px">
+          <thead>
+            <tr>
+              <th style="width:60px">#</th>
+              <th>Título</th>
+              <th>Cliente</th>
+              <th>Técnico</th>
+              <th>Estado</th>
+              <th>Prioridad</th>
+              <th>Fecha límite</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ticket of filteredTickets(); track ticket.id) {
+              <tr [routerLink]="['/app/tickets', ticket.id]">
+                <td style="color:var(--muted);font-size:13px">#{{ ticket.id }}</td>
+                <td><div class="font-medium" style="font-size:14px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ticket.titulo }}</div></td>
+                <td style="font-size:14px;color:var(--muted)">{{ ticket.cliente }}</td>
+                <td style="font-size:14px;color:var(--muted)">{{ ticket.tecnico ?? '— Sin asignar' }}</td>
+                <td><span [class]="chipClass(ticket.estado)"><span class="chip-dot"></span>{{ ticket.estado }}</span></td>
+                <td><span class="prio {{ ticket.prioridad.toLowerCase() }}">{{ ticket.prioridad }}</span></td>
+                <td style="color:var(--muted);font-size:13px;white-space:nowrap">{{ ticket.fecha_limite | date:'dd/MM/yyyy' }}</td>
+              </tr>
+            }
+            @if (filteredTickets().length === 0) {
+              <tr><td colspan="7" class="text-center py-16" style="color:var(--muted);font-size:15px">No se encontraron tickets</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>
