@@ -1,14 +1,18 @@
 const ticketModel = require("../models/ticketModel");
-const db = require("../config/db");
 
 // ── GET /api/tickets ──────────────────────────────────────────────────────────
 const getTickets = async (req, res) => {
   try {
-    const tickets = await ticketModel.getTickets();
-    res.json({ data: tickets, total: tickets.length });
+    let tickets;
+    if (req.user.rol === 2) {
+      tickets = await ticketModel.getTicketsPorTecnico(req.user.id);
+    } else {
+      tickets = await ticketModel.getTickets();
+    }
+    return res.json({ data: tickets, total: tickets.length });
   } catch (error) {
     console.error("Error getTickets:", error.message);
-    res.status(500).json({ error: "Error obteniendo tickets" });
+    return res.status(500).json({ error: "Error obteniendo tickets" });
   }
 };
 
@@ -18,10 +22,16 @@ const getTicketById = async (req, res) => {
   try {
     const ticket = await ticketModel.getTicketById(id);
     if (!ticket) return res.status(404).json({ error: "Ticket no encontrado" });
-    res.json({ data: ticket });
+
+    // MEJORA: Validar que si es técnico, el ticket realmente le pertenezca
+    if (req.user.rol === 2 && ticket.tecnico_id !== req.user.id) {
+      return res.status(403).json({ error: "No tienes permiso para ver este ticket" });
+    }
+
+    return res.json({ data: ticket });
   } catch (error) {
     console.error("Error getTicketById:", error.message);
-    res.status(500).json({ error: "Error obteniendo ticket" });
+    return res.status(500).json({ error: "Error obteniendo ticket" });
   }
 };
 
@@ -31,10 +41,15 @@ const getTicketDetalle = async (req, res) => {
   try {
     const ticket = await ticketModel.getTicketDetalle(id);
     if (!ticket) return res.status(404).json({ error: "Ticket no encontrado" });
-    res.json({ data: ticket });
+
+    if (req.user.rol === 2 && ticket.tecnico_id !== req.user.id) {
+      return res.status(403).json({ error: "No tienes permiso para ver el detalle de este ticket" });
+    }
+
+    return res.json({ data: ticket });
   } catch (error) {
     console.error("Error getTicketDetalle:", error.message);
-    res.status(500).json({ error: "Error obteniendo detalle del ticket" });
+    return res.status(500).json({ error: "Error obteniendo detalle del ticket" });
   }
 };
 
@@ -42,7 +57,6 @@ const getTicketDetalle = async (req, res) => {
 const createTicket = async (req, res) => {
   const { titulo, descripcion, cliente_nombre, categoria_id } = req.body;
 
-  // Validación mínima obligatoria
   if (!titulo || !descripcion || !cliente_nombre || !categoria_id) {
     return res.status(400).json({
       error: "titulo, descripcion, cliente_nombre y categoria_id son obligatorios",
@@ -51,10 +65,10 @@ const createTicket = async (req, res) => {
 
   try {
     const ticket = await ticketModel.createTicket(req.body);
-    res.status(201).json({ data: ticket, message: "Ticket creado correctamente" });
+    return res.status(201).json({ data: ticket, message: "Ticket creado correctamente" });
   } catch (error) {
     console.error("Error createTicket:", error.message);
-    res.status(500).json({ error: "Error creando ticket" });
+    return res.status(500).json({ error: "Error creando ticket" });
   }
 };
 
@@ -68,32 +82,16 @@ const asignarTecnico = async (req, res) => {
   }
 
   try {
-    // Verificar que el usuario sea técnico (rol_id = 2)
-    const tecnico = await db.query(
-      "SELECT id, nombre FROM usuarios WHERE id = $1 AND rol_id = 2",
-      [tecnico_id]
-    );
-
-    if (tecnico.rows.length === 0) {
-      return res.status(400).json({ error: "El usuario no es un técnico válido" });
+    const ticketActualizado = await ticketModel.asignarTecnico(id, tecnico_id);
+    
+    if (!ticketActualizado) {
+      return res.status(400).json({ error: "No se pudo asignar. Verifica el ID del ticket y que el usuario sea un técnico válido." });
     }
 
-    const result = await db.query(
-      `UPDATE tickets
-       SET tecnico_id = $1, fecha_actualizacion = NOW()
-       WHERE id = $2
-       RETURNING *`,
-      [tecnico_id, id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Ticket no encontrado" });
-    }
-
-    res.json({ data: result.rows[0], message: "Técnico asignado correctamente" });
+    return res.json({ data: ticketActualizado, message: "Técnico asignado correctamente" });
   } catch (error) {
     console.error("Error asignarTecnico:", error.message);
-    res.status(500).json({ error: "Error asignando técnico" });
+    return res.status(500).json({ error: "Error asignando técnico" });
   }
 };
 
@@ -107,22 +105,68 @@ const cambiarEstado = async (req, res) => {
   }
 
   try {
-    const result = await db.query(
-      `UPDATE tickets
-       SET estado_id = $1, fecha_actualizacion = NOW()
-       WHERE id = $2
-       RETURNING *`,
-      [estado_id, id]
-    );
+    if (req.user.rol === 2) {
+      const ticket = await ticketModel.getTicketById(id);
+      if (ticket && ticket.tecnico_id !== req.user.id) {
+        return res.status(403).json({ error: "No puedes cambiar el estado de un ticket que no tienes asignado" });
+      }
+    }
 
-    if (result.rows.length === 0) {
+    const ticketActualizado = await ticketModel.cambiarEstado(id, estado_id);
+
+    if (!ticketActualizado) {
       return res.status(404).json({ error: "Ticket no encontrado" });
     }
 
-    res.json({ data: result.rows[0], message: "Estado actualizado correctamente" });
+    return res.json({ data: ticketActualizado, message: "Estado actualizado correctamente" });
   } catch (error) {
     console.error("Error cambiarEstado:", error.message);
-    res.status(500).json({ error: "Error cambiando estado" });
+    return res.status(500).json({ error: "Error cambiando estado" });
+  }
+};
+
+// ── POST /api/tickets/:id/notificar ──────────────────────────────────────────
+const registrarNotificacionCliente = async (req, res) => {
+  const { id } = req.params;
+  const { mensaje } = req.body;
+
+  if (!mensaje) return res.status(400).json({ error: "El mensaje es requerido" });
+
+  try {
+    const notificacion = await ticketModel.registrarNotificacion(id, mensaje);
+    return res.status(201).json({ data: notificacion, message: "Notificación registrada en el historial" });
+  } catch (error) {
+    console.error("Error registrarNotificacionCliente:", error.message);
+    return res.status(500).json({ error: "Error al guardar en el historial" });
+  }
+};
+
+// ── GET /api/tickets/:id/notificaciones ──────────────────────────────────────
+const obtenerHistorialNotificaciones = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const historial = await ticketModel.getHistorialNotificaciones(id);
+    return res.json({ data: historial });
+  } catch (error) {
+    console.error("Error obtenerHistorialNotificaciones:", error.message);
+    return res.status(500).json({ error: "Error obteniendo historial" });
+  }
+};
+
+// ── GET /api/tickets/notificaciones-globales ─────────────────────────────────
+const obtenerHistorialGlobal = async (req, res) => {
+  try {
+    // Forzamos el await al modelo
+    const historial = await ticketModel.getTodosHistorialNotificaciones();
+    
+    // Verificación de seguridad si la BD viene vacía o nula para que no se rompa el front
+    const dataResponse = historial ? historial : [];
+
+    // Cortamos la ejecución explícitamente con un return res.json
+    return res.status(200).json({ data: dataResponse });
+  } catch (error) {
+    console.error("Error obtenerHistorialGlobal:", error.message);
+    return res.status(500).json({ error: "Error obteniendo historial global" });
   }
 };
 
@@ -133,4 +177,7 @@ module.exports = {
   createTicket,
   asignarTecnico,
   cambiarEstado,
+  registrarNotificacionCliente,
+  obtenerHistorialNotificaciones,
+  obtenerHistorialGlobal
 };

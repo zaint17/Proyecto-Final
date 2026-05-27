@@ -51,6 +51,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/usuarios/usuarios').then(m => m.Usuarios)
       },
+      
+      // 📌 CORREGIDO: Cambiado a 'notificaciones' para que coincida exactamente con tu Sidebar
+      {
+        path: 'notificaciones',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/historial-notificaciones/historial-notificaciones').then(m => m.HistorialNotificaciones)
+      }
 
     ]
   },

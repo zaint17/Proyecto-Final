@@ -2,10 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
+// IMPORTANTE: Importamos lo necesario para la ruta de notificaciones globales
+const { verifyToken, checkRole } = require("./middleware/authMiddleware");
+const ticketController = require("./controllers/ticketController");
+
 const app = express();
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// Permite peticiones desde Angular (localhost:4200) y producción
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:4200",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -18,7 +21,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Rutas ─────────────────────────────────────────────────────────────────────
+// ── 📌 CORRECCIÓN RADICAL: RUTA INDEPENDIENTE ULTRA PROTEGIDA ──────────────────
+// Al ponerla AQUÍ, arriba de todo, Express intercepta la URL limpia y no se cruza jamás
+app.get("/api/notificaciones-globales", verifyToken, checkRole([1]), ticketController.obtenerHistorialGlobal);
+
+
+// ── Rutas Módulos ─────────────────────────────────────────────────────────────
 const authRoutes      = require("./routes/authRoutes");
 const userRoutes      = require("./routes/userRoutes");
 const ticketRoutes    = require("./routes/ticketRoutes");
@@ -40,7 +48,6 @@ app.use((req, res) => {
 });
 
 // ── Error handler global ──────────────────────────────────────────────────────
-// Captura cualquier error que llegue con next(err)
 app.use((err, req, res, next) => {
   console.error("❌ Error no controlado:", err.stack);
   res.status(err.status || 500).json({

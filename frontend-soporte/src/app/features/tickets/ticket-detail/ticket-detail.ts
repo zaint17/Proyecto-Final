@@ -6,9 +6,10 @@ import { TicketService, TicketDetalle } from '../../../core/services/ticket.serv
 import { RespuestaService, Respuesta } from '../../../core/services/respuesta.service';
 import { UserService, Tecnico } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 import {
   LucideAngularModule, ArrowLeft, User, Wrench,
-  MessageSquare, Send, UserCheck, RefreshCw
+  MessageSquare, Send, UserCheck, RefreshCw, Bell
 } from 'lucide-angular';
 
 @Component({
@@ -19,17 +20,19 @@ import {
 })
 export class TicketDetail implements OnInit {
 
-  readonly ArrowLeft   = ArrowLeft;
-  readonly User        = User;
-  readonly Wrench      = Wrench;
+  readonly ArrowLeft    = ArrowLeft;
+  readonly User         = User;
+  readonly Wrench       = Wrench;
   readonly MessageSquare = MessageSquare;
-  readonly Send        = Send;
-  readonly UserCheck   = UserCheck;
-  readonly RefreshCw   = RefreshCw;
+  readonly Send         = Send;
+  readonly UserCheck    = UserCheck;
+  readonly RefreshCw    = RefreshCw;
+  readonly Bell         = Bell; // Icono para la sección de notificaciones
 
   ticket     = signal<TicketDetalle | null>(null);
   respuestas = signal<Respuesta[]>([]);
   tecnicos   = signal<Tecnico[]>([]);
+  historialNotificaciones = signal<any[]>([]); // Signal agregado para guardar la bitácora
   cargando   = signal(true);
   error      = signal('');
   nuevoMsg   = signal('');
@@ -50,6 +53,7 @@ export class TicketDetail implements OnInit {
     private ticketService: TicketService,
     private respuestaService: RespuestaService,
     private userService: UserService,
+    private toast: ToastService,
     public auth: AuthService
   ) {}
 
@@ -57,6 +61,7 @@ export class TicketDetail implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.cargarTicket(id);
     this.cargarRespuestas(id);
+    this.cargarHistorial(id); // Carga inicial del historial de notificaciones
     if (this.auth.esAdmin()) this.cargarTecnicos();
   }
 
@@ -85,6 +90,13 @@ export class TicketDetail implements OnInit {
     });
   }
 
+  cargarHistorial(ticketId: number) {
+    this.ticketService.getHistorialNotificaciones(ticketId).subscribe({
+      next: res => this.historialNotificaciones.set(res.data),
+      error: () => {}
+    });
+  }
+
   enviarMensaje() {
     const msg = this.nuevoMsg().trim();
     if (!msg || !this.ticket()) return;
@@ -102,16 +114,42 @@ export class TicketDetail implements OnInit {
   asignarTecnico() {
     if (!this.tecnicoSeleccionado() || !this.ticket()) return;
     this.ticketService.asignarTecnico(this.ticket()!.id, this.tecnicoSeleccionado()!).subscribe({
-      next: res => this.ticket.set({ ...this.ticket()!, ...res.data }),
-      error: () => alert('Error al asignar técnico')
+      next: res => {
+        this.ticket.set({ ...this.ticket()!, ...res.data });
+        this.toast.success('Técnico asignado correctamente');
+      },
+      error: () => this.toast.error('Error al asignar técnico')
     });
   }
 
   cambiarEstado() {
     if (!this.estadoSeleccionado() || !this.ticket()) return;
     this.ticketService.cambiarEstado(this.ticket()!.id, this.estadoSeleccionado()!).subscribe({
-      next: res => this.ticket.set({ ...this.ticket()!, ...res.data }),
-      error: () => alert('Error al cambiar estado')
+      next: res => {
+        this.ticket.set({ ...this.ticket()!, ...res.data });
+        this.toast.success('Estado actualizado correctamente');
+      },
+      error: () => this.toast.error('Error al cambiar estado')
+    });
+  }
+
+  notificarPorWhatsApp(ticket: any) {
+    if (!ticket.cliente_telefono) {
+      this.toast.error('El cliente no tiene un teléfono registrado.');
+      return;
+    }
+    const telefonoFormateado = ticket.cliente_telefono.replace(/\s+/g, ''); 
+    const mensaje = `Hola ${ticket.cliente_nombre}, te saludamos de Distribuidora LURESA. Te informamos que tu requerimiento de soporte técnico con código #${ticket.id} (${ticket.titulo}) ya se encuentra SOLUCIONADO y listo para recoger. ¡Gracias por tu confianza!`;
+    
+    const urlWhatsapp = `https://wa.me/51${telefonoFormateado}?text=${encodeURIComponent(mensaje)}`;
+    window.open(urlWhatsapp, '_blank');
+
+    this.ticketService.registrarNotificacion(ticket.id, mensaje).subscribe({
+      next: () => {
+        this.toast.success('Notificación registrada en el historial.');
+        this.cargarHistorial(ticket.id); 
+      },
+      error: () => this.toast.error('No se pudo guardar el registro del historial.')
     });
   }
 

@@ -75,4 +75,29 @@ export class TicketService {
       { estado_id }
     );
   }
+
+  // Obtener ticket por ID (Simple)
+  getTicketById(id: number) {
+    return this.http.get<{ data: Ticket }>(
+      `${this.url}/${id}`
+    );
+  }
+
+  // Registrar el envío en el historial
+  registrarNotificacion(ticketId: number, mensaje: string) {
+    return this.http.post(`${this.url}/${ticketId}/notificar`, { mensaje });
+  }
+
+  // Obtener el historial para pintarlo en la vista de detalles
+  getHistorialNotificaciones(ticketId: number) {
+    return this.http.get<{ data: any[] }>(
+      `${this.url}/${ticketId}/notificaciones`
+    );
+  }
+
+  getHistorialGlobal() {
+    return this.http.get<{ data: any[] }>(
+      `${environment.apiUrl}/notificaciones-globales`
+    );
+  }
 }

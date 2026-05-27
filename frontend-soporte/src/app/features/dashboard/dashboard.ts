@@ -1,35 +1,35 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { TicketService, Ticket } from '../../core/services/ticket.service';
+import { TicketEventsService } from '../../core/services/ticket-events.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
   LucideAngularModule,
-  Ticket as TicketIcon, AlertCircle, Clock, CheckCircle2,
-  ArrowRight, TrendingUp
+  Ticket as TicketIcon, AlertCircle, Clock, CheckCircle2, ArrowRight
 } from 'lucide-angular';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, LucideAngularModule],
+  imports: [RouterLink,LucideAngularModule],
   templateUrl: './dashboard.html',
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, OnDestroy {
 
-  readonly Math = Math;
-  readonly TicketIcon    = TicketIcon;
-  readonly AlertCircle   = AlertCircle;
-  readonly Clock         = Clock;
-  readonly CheckCircle2  = CheckCircle2;
-  readonly ArrowRight    = ArrowRight;
-  readonly TrendingUp    = TrendingUp;
+  readonly TicketIcon   = TicketIcon;
+  readonly AlertCircle  = AlertCircle;
+  readonly Clock        = Clock;
+  readonly CheckCircle2 = CheckCircle2;
+  readonly ArrowRight   = ArrowRight;
+  readonly Math         = Math;
 
-  tickets   = signal<Ticket[]>([]);
-  cargando  = signal(true);
+  tickets  = signal<Ticket[]>([]);
+  cargando = signal(true);
 
   total      = computed(() => this.tickets().length);
   abiertos   = computed(() => this.tickets().filter(t => t.estado === 'Abierto').length);
-  enProgreso = computed(() => this.tickets().filter(t => t.estado === 'En progreso').length);
+  enProgreso = computed(() => this.tickets().filter(t => t.estado.trim().toLowerCase() === 'en progreso').length);
   resueltos  = computed(() => this.tickets().filter(t => t.estado === 'Resuelto' || t.estado === 'Cerrado').length);
 
   alta  = computed(() => this.tickets().filter(t => t.prioridad === 'Alta').length);
@@ -42,9 +42,26 @@ export class Dashboard implements OnInit {
   pctMedia = computed(() => this.total() ? Math.round(this.media() / this.total() * 100) : 0);
   pctBaja  = computed(() => this.total() ? Math.round(this.baja()  / this.total() * 100) : 0);
 
-  constructor(private ticketService: TicketService, public auth: AuthService) {}
+  private sub!: Subscription;
+
+  constructor(
+    private ticketService: TicketService,
+    private ticketEvents: TicketEventsService,
+    public auth: AuthService
+  ) {}
 
   ngOnInit() {
+    this.cargar();
+    // Se recarga automáticamente cada vez que se crea un ticket
+    this.sub = this.ticketEvents.ticketCreado$.subscribe(() => this.cargar());
+  }
+
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
+  }
+
+  cargar() {
+    this.cargando.set(true);
     this.ticketService.getTickets().subscribe({
       next: res => { this.tickets.set(res.data); this.cargando.set(false); },
       error: ()  => this.cargando.set(false)
@@ -52,10 +69,16 @@ export class Dashboard implements OnInit {
   }
 
   chipClass(estado: string): string {
-    const m: Record<string, string> = {
-      'Abierto': 'open', 'En progreso': 'progress',
-      'Resuelto': 'resolved', 'Cerrado': 'closed'
-    };
-    return 'chip ' + (m[estado] ?? 'closed');
-  }
+
+  const key = estado.trim().toLowerCase();
+
+  const m: Record<string, string> = {
+    'abierto': 'open',
+    'en progreso': 'progress',
+    'resuelto': 'resolved',
+    'cerrado': 'closed'
+  };
+
+  return 'chip ' + (m[key] ?? 'closed');
+}
 }

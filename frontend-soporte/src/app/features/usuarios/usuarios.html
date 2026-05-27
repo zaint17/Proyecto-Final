@@ -1,0 +1,132 @@
+<div class="p-4 sm:p-6 lg:p-8" style="max-width:100%">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold flex items-center gap-2 mb-1">
+        <lucide-icon [img]="Users" size="22" aria-hidden="true" style="color:var(--accent)"></lucide-icon>
+        Técnicos
+      </h1>
+      <p class="text-sm" style="color:var(--muted)">Equipo técnico registrado en el sistema</p>
+    </div>
+    <button (click)="abrirModal()" class="btn-primary">
+      <lucide-icon [img]="Plus" size="14" aria-hidden="true"></lucide-icon>
+      Nuevo técnico
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="text-center py-20 text-lg" style="color:var(--muted)">Cargando...</div>
+  }
+
+  <div class="card p-0 overflow-hidden w-full">
+    <div class="overflow-x-auto">
+      <table class="tbl" style="min-width:500px">
+        <thead>
+          <tr>
+            <th style="width:70px">#</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of tecnicos(); track u.id) {
+            <tr style="cursor:default">
+              <td style="color:var(--muted);font-size:13px">#{{ u.id }}</td>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'Syne',sans-serif">
+                    {{ u.nombre.slice(0,2).toUpperCase() }}
+                  </div>
+                  <span style="font-weight:500;font-size:15px">{{ u.nombre }}</span>
+                </div>
+              </td>
+              <td style="color:var(--muted);font-size:14px">{{ u.email }}</td>
+              <td>
+                <span style="background:#F59E0B20;color:#FCD34D;border:1px solid #F59E0B30;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:5px">
+                  <lucide-icon [img]="Wrench" size="11" aria-hidden="true"></lucide-icon>
+                  Técnico
+                </span>
+              </td>
+            </tr>
+          }
+          @if (tecnicos().length === 0 && !cargando()) {
+            <tr><td colspan="4" class="text-center py-16" style="color:var(--muted);font-size:15px">
+              Sin técnicos registrados
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal nuevo técnico -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(4px)">
+    <div class="card w-full" style="max-width:440px;border-color:var(--border2)">
+
+      <!-- Header modal -->
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold">Registrar técnico</h2>
+        <button (click)="modalAbierto.set(false)" class="btn-ghost p-2">
+          <lucide-icon [img]="X" size="16" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+
+      @if (errorForm()) {
+        <div class="px-4 py-3 rounded-xl text-sm mb-4"
+             style="background:#EF444420;border:1px solid #EF444430;color:#FCA5A5">
+          ⚠️ {{ errorForm() }}
+        </div>
+      }
+
+      <div class="flex flex-col gap-4">
+
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Nombre completo *</label>
+          <input type="text" [(ngModel)]="form.nombre" class="input-base"
+            placeholder="Nombre del técnico" />
+        </div>
+
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Correo electrónico *</label>
+          <input type="email" [(ngModel)]="form.email" class="input-base"
+            placeholder="tecnico@luresa.com" />
+        </div>
+
+        <div>
+          <label class="block text-xs mb-1.5" style="color:var(--muted)">Contraseña *</label>
+          <div class="relative">
+            <input [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="form.password" class="input-base" style="padding-right:42px"
+              placeholder="Mínimo 6 caracteres" />
+            <button type="button"
+              class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center"
+              style="background:none;border:none;color:var(--muted);cursor:pointer"
+              (click)="showPassword.set(!showPassword())">
+              @if (showPassword()) {
+                <lucide-icon [img]="EyeOff" size="15" aria-hidden="true"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="Eye" size="15" aria-hidden="true"></lucide-icon>
+              }
+            </button>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-1">
+          <button (click)="guardar()" [disabled]="guardando()" class="btn-primary flex-1 justify-center">
+            {{ guardando() ? 'Guardando...' : 'Registrar técnico' }}
+          </button>
+          <button (click)="modalAbierto.set(false)" class="btn-ghost flex-1 justify-center">
+            Cancelar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

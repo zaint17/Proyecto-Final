@@ -18,7 +18,7 @@ async function main() {
     const hash = await bcrypt.hash(p.password, SALT_ROUNDS);
     console.log(`-- ${p.usuario} (${p.password}):`);
     console.log(`'${hash}'\n`);
-  }2
+  }
 }
 
 main();

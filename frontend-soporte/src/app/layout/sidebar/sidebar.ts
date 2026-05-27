@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LucideAngularModule, LayoutDashboard, Ticket, Users, LogOut, Headset } from 'lucide-angular';
+import { Bell } from 'lucide-angular';
 
 @Component({
   selector: 'app-sidebar',
@@ -15,6 +16,7 @@ export class Sidebar {
   readonly LayoutDashboard = LayoutDashboard;
   readonly Ticket          = Ticket;
   readonly Users           = Users;
+  readonly Bell            = Bell;
   readonly LogOut          = LogOut;
   readonly Headset         = Headset;
 

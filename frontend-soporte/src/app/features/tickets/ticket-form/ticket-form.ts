@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { TicketService } from '../../../core/services/ticket.service';
+import { TicketEventsService } from '../../../core/services/ticket-events.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { environment } from '../../../../environments/environment';
 import { LucideAngularModule, ArrowLeft, Save, User, FileText, Tag } from 'lucide-angular';
 
@@ -35,6 +37,8 @@ export class TicketForm implements OnInit {
 
   constructor(
     private ticketService: TicketService,
+    private ticketEvents: TicketEventsService,
+    private toast: ToastService,
     private http: HttpClient,
     private router: Router
   ) {}
@@ -50,15 +54,24 @@ export class TicketForm implements OnInit {
   }
 
   guardar() {
-    if (!this.form.titulo || !this.form.descripcion || !this.form.cliente_nombre || !this.form.categoria_id) {
+    if (!this.form.titulo || !this.form.descripcion ||
+        !this.form.cliente_nombre || !this.form.categoria_id) {
       this.error.set('Completa los campos obligatorios (*).');
       return;
     }
     this.cargando.set(true);
     this.error.set('');
+
     this.ticketService.crear({ ...this.form, categoria_id: Number(this.form.categoria_id) }).subscribe({
-      next: () => this.router.navigate(['/app/tickets']),
-      error: (err) => { this.cargando.set(false); this.error.set(err.error?.error || 'Error al crear el ticket.'); }
+      next: () => {
+        this.ticketEvents.emitirTicketCreado(); // ← notifica al dashboard
+        this.toast.success('Ticket creado correctamente');
+        this.router.navigate(['/app/tickets']);
+      },
+      error: err => {
+        this.cargando.set(false);
+        this.error.set(err.error?.error || 'Error al crear el ticket.');
+      }
     });
   }
 }

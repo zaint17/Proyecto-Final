@@ -22,22 +22,25 @@ export class TicketList implements OnInit {
   cargando     = signal(true);
   error        = signal('');
   search       = signal('');
-  filtroEstado = signal('');
+  filtroEstado = signal('todos');
 
   filteredTickets = computed(() => {
-    let lista = this.tickets();
-    if (this.search()) {
-      const q = this.search().toLowerCase();
-      lista = lista.filter(t =>
-        t.titulo.toLowerCase().includes(q) ||
-        t.cliente.toLowerCase().includes(q)
-      );
-    }
-    if (this.filtroEstado()) {
-      lista = lista.filter(t => t.estado === this.filtroEstado());
-    }
-    return lista;
-  });
+  let lista = this.tickets();
+
+  if (this.search()) {
+    const q = this.search().toLowerCase();
+    lista = lista.filter(t =>
+      t.titulo.toLowerCase().includes(q) ||
+      t.cliente.toLowerCase().includes(q)
+    );
+  }
+
+  if (this.filtroEstado() && this.filtroEstado() !== 'todos') {
+    lista = lista.filter(t => t.estado === this.filtroEstado());
+  }
+
+  return lista;
+});
 
   constructor(private ticketService: TicketService, public auth: AuthService) {}
 

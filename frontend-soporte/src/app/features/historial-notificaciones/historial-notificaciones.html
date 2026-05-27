@@ -1,0 +1,58 @@
+<div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+  
+  <div class="flex items-center gap-3 mb-6">
+    <div class="p-2 rounded-xl" style="background:var(--bg3); border:1px solid var(--border)">
+      <lucide-icon [img]="Bell" size="20" style="color:var(--accent)"></lucide-icon>
+    </div>
+    <div>
+      <h1 class="text-xl font-bold">Auditoría de Notificaciones</h1>
+      <p class="text-xs" style="color:var(--muted)">Historial completo de alertas enviadas a clientes de LURESA</p>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="text-center py-20" style="color:var(--muted)">⏳ Cargando bitácora global...</div>
+  } @else {
+    <div class="card p-0 overflow-hidden" style="background:var(--bg2); border:1px solid var(--border)">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr style="background:var(--bg3); border-bottom:1px solid var(--border)">
+              <th class="p-4 font-semibold text-xs opacity-75" style="color:var(--muted)">TICKET</th>
+              <th class="p-4 font-semibold text-xs opacity-75" style="color:var(--muted)">CLIENTE</th>
+              <th class="p-4 font-semibold text-xs opacity-75" style="color:var(--muted)">CANAL</th>
+              <th class="p-4 font-semibold text-xs opacity-75" style="color:var(--muted)">MENSAJE ENVIADO</th>
+              <th class="p-4 font-semibold text-xs opacity-75" style="color:var(--muted)">FECHA EMISIÓN</th>
+              <th class="p-4 font-semibold text-xs opacity-75 text-center" style="color:var(--muted)">ACCIÓN</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (historial().length === 0) {
+              <tr>
+                <td colspan="6" class="p-8 text-center" style="color:var(--muted)">No se registran alertas en el sistema.</td>
+              </tr>
+            }
+            @for (item of historial(); track item.id) {
+              <tr style="border-bottom:1px solid var(--border); transition: background 0.2s" class="hover:bg-[var(--bg3)]">
+                <td class="p-4 font-medium">#{{ item.ticket_id }} - {{ item.ticket_titulo }}</td>
+                <td class="p-4" style="color:var(--muted)">{{ item.cliente_nombre }}</td>
+                <td class="p-4">
+                  <span class="text-xs px-2 py-0.5 rounded-md font-semibold" style="background:#25D36620; color:#4ADE80; border:1px solid #25D36630">
+                    {{ item.tipo_notificacion }}
+                  </span>   
+                </td>
+                <td class="p-4 max-w-xs truncate" style="color:var(--muted); font-size:13px">{{ item.mensaje }}</td>
+                <td class="p-4 whitespace-nowrap" style="color:var(--muted)">{{ item.fecha_envio | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="p-4 text-center">
+                  <a [routerLink]="['/app/tickets', item.ticket_id]" class="btn-ghost p-2 inline-flex items-center gap-1 text-xs" style="color:var(--accent); text-decoration: none;">
+                    <lucide-icon [img]="Eye" size="14"></lucide-icon> Ver Ticket
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

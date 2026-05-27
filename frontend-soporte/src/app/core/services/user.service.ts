@@ -8,9 +8,14 @@ export interface Tecnico {
   email: string;
 }
 
+export interface CrearTecnicoDto {
+  nombre: string;
+  email: string;
+  password: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UserService {
-
   private url = `${environment.apiUrl}/usuarios`;
 
   constructor(private http: HttpClient) {}
@@ -21,5 +26,9 @@ export class UserService {
 
   getUsuarios() {
     return this.http.get<{ data: Tecnico[] }>(this.url);
+  }
+
+  crearTecnico(dto: CrearTecnicoDto) {
+    return this.http.post<{ data: Tecnico; message: string }>(this.url, dto);
   }
 }

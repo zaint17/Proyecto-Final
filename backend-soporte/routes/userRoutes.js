@@ -9,4 +9,6 @@ router.get("/usuarios", verifyToken, checkRole([1]), userController.getUsers);
 // GET /api/usuarios/tecnicos — admin y técnico
 router.get("/usuarios/tecnicos", verifyToken, checkRole([1, 2]), userController.getTecnicos);
 
+router.post("/usuarios", verifyToken, checkRole([1]), userController.crearTecnico);
+
 module.exports = router;
