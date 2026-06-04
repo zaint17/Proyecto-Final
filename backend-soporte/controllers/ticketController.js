@@ -23,7 +23,6 @@ const getTicketById = async (req, res) => {
     const ticket = await ticketModel.getTicketById(id);
     if (!ticket) return res.status(404).json({ error: "Ticket no encontrado" });
 
-    // MEJORA: Validar que si es técnico, el ticket realmente le pertenezca
     if (req.user.rol === 2 && ticket.tecnico_id !== req.user.id) {
       return res.status(403).json({ error: "No tienes permiso para ver este ticket" });
     }
@@ -85,7 +84,16 @@ const asignarTecnico = async (req, res) => {
     const ticketActualizado = await ticketModel.asignarTecnico(id, tecnico_id);
     
     if (!ticketActualizado) {
-      return res.status(400).json({ error: "No se pudo asignar. Verifica el ID del ticket y que el usuario sea un técnico válido." });
+      return res.status(400).json({ error: "No se pudo asignar. Verifica el ID del ticket." });
+    }
+
+    // 🔥 EMISIÓN WEB SOCKET EN TIEMPO REAL
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("nuevoTicketAsignado", {
+        tecnico_id: parseInt(tecnico_id),
+        ticket_id: id
+      });
     }
 
     return res.json({ data: ticketActualizado, message: "Técnico asignado correctamente" });
@@ -95,7 +103,7 @@ const asignarTecnico = async (req, res) => {
   }
 };
 
-// ── PUT /api/tickets/:id/estado ───────────────────────────────────────────────
+// ── PUT /api/tickets/:id/estado (OPTIMIZADO PARA PROTOCOLO HÍBRIDO) ───────────
 const cambiarEstado = async (req, res) => {
   const { id } = req.params;
   const { estado_id } = req.body;
@@ -106,10 +114,7 @@ const cambiarEstado = async (req, res) => {
 
   try {
     if (req.user.rol === 2) {
-      const ticket = await ticketModel.getTicketById(id);
-      if (ticket && ticket.tecnico_id !== req.user.id) {
-        return res.status(403).json({ error: "No puedes cambiar el estado de un ticket que no tienes asignado" });
-      }
+      return res.status(403).json({ error: "Acceso denegado. Solo el administrador puede modificar el estado del servicio." });
     }
 
     const ticketActualizado = await ticketModel.cambiarEstado(id, estado_id);
@@ -118,10 +123,50 @@ const cambiarEstado = async (req, res) => {
       return res.status(404).json({ error: "Ticket no encontrado" });
     }
 
+    // 🔒 SI EL NUEVO ESTADO ES CERRADO (ID 4), REGISTRAMOS LA ACCIÓN EN LA BD
+    if (parseInt(estado_id) === 4) {
+      const ticketDetalle = await ticketModel.getTicketDetalle(id);
+      
+      if (ticketDetalle && ticketDetalle.cliente_telefono) {
+        // Redactamos el mismo mensaje estandarizado que se enviará por el navegador
+        const mensajeWhatsApp = `Hola ${ticketDetalle.cliente_nombre}, te saludamos de Distribuidora LURESA. Te informamos que tu requerimiento de soporte técnico con código #${id} (${ticketDetalle.titulo}) ya se encuentra SOLUCIONADO y listo para recoger. ¡Gracias por tu preferencia!`;
+        
+        // Guardamos de inmediato en la base de datos para pintar las alertas
+        await ticketModel.registrarNotificacion(id, mensajeWhatsApp);
+      }
+    }
+
     return res.json({ data: ticketActualizado, message: "Estado actualizado correctamente" });
   } catch (error) {
     console.error("Error cambiarEstado:", error.message);
     return res.status(500).json({ error: "Error cambiando estado" });
+  }
+};
+
+// ── POST /api/tickets/:id/upload-video ───────────────────────────────────────
+const uploadVideoLocal = async (req, res) => {
+  const { id } = req.params;
+  const { tipo } = req.body;
+
+  if (!req.file) {
+    return res.status(400).json({ error: "No se ha seleccionado ningún archivo de video" });
+  }
+
+  if (!tipo || (tipo !== 'entrada' && tipo !== 'salida')) {
+    return res.status(400).json({ error: "El tipo de video debe ser 'entrada' o 'salida'" });
+  }
+
+  try {
+    const videoUrl = `/uploads/videos/${req.file.filename}`;
+    await ticketModel.actualizarVideoUrl(id, videoUrl, tipo, req.user.id);
+
+    return res.json({ 
+      data: { video_url: videoUrl }, 
+      message: `Video de ${tipo} guardado físicamente en el servidor con éxito.` 
+    });
+  } catch (error) {
+    console.error("Error uploadVideoLocal:", error.message);
+    return res.status(500).json({ error: "Error procesando el archivo de video en la base de datos" });
   }
 };
 
@@ -156,13 +201,8 @@ const obtenerHistorialNotificaciones = async (req, res) => {
 // ── GET /api/tickets/notificaciones-globales ─────────────────────────────────
 const obtenerHistorialGlobal = async (req, res) => {
   try {
-    // Forzamos el await al modelo
     const historial = await ticketModel.getTodosHistorialNotificaciones();
-    
-    // Verificación de seguridad si la BD viene vacía o nula para que no se rompa el front
     const dataResponse = historial ? historial : [];
-
-    // Cortamos la ejecución explícitamente con un return res.json
     return res.status(200).json({ data: dataResponse });
   } catch (error) {
     console.error("Error obtenerHistorialGlobal:", error.message);
@@ -177,6 +217,7 @@ module.exports = {
   createTicket,
   asignarTecnico,
   cambiarEstado,
+  uploadVideoLocal,
   registrarNotificacionCliente,
   obtenerHistorialNotificaciones,
   obtenerHistorialGlobal

@@ -36,13 +36,40 @@ h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
 ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
 
 /* ── Chips de estado ── */
-.chip { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500; }
-.chip-dot { width:5px;height:5px;border-radius:50%;background:currentColor; }
-.chip.open     { background:#EF444420;color:#FCA5A5;border:1px solid #EF444430; }
-.chip.progress { background:#F59E0B20;color:#FCD34D;border:1px solid #F59E0B30; }
-.chip.resolved { background:#22C55E20;color:#86EFAC;border:1px solid #22C55E30; }
-.chip.closed   { background:#8891A820;color:#8891A8;border:1px solid #8891A830; }
-
+.chip { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px; 
+  padding: 4px 12px; 
+  border-radius: 20px; 
+  font-size: 11px; 
+  font-weight: 600; 
+  line-height: 1;
+}
+.chip-dot { 
+  width: 6px; 
+  height: 6px; 
+  border-radius: 50%; 
+  background: currentColor; 
+}
+/* Abierto -> Rojo */
+.chip.open { 
+  background: rgba(239, 68, 68, 0.15); 
+  color: #FCA5A5; 
+  border: 1px solid rgba(239, 68, 68, 0.3); 
+}
+/* En Progreso -> Amarillo */
+.chip.progress { 
+  background: rgba(245, 158, 11, 0.15); 
+  color: #FCD34D; 
+  border: 1px solid rgba(245, 158, 11, 0.3); 
+}
+/* Cerrado / Resuelto -> Verde */
+.chip.closed { 
+  background: rgba(34, 197, 94, 0.15); 
+  color: #86EFAC; 
+  border: 1px solid rgba(34, 197, 94, 0.3); 
+}
 /* ── Prioridad ── */
 .prio { font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px; }
 .prio.alta  { background:#EF444415;color:#FCA5A5; }

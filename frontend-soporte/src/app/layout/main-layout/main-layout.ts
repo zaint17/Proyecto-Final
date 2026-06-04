@@ -1,14 +1,22 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Sidebar } from '../sidebar/sidebar';
 import { Navbar } from '../navbar/navbar';
 import { ToastComponent } from '../../core/components/toast';
-import { LucideAngularModule, Menu } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
+import { TicketEventsService } from '../../core/services/ticket-events.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, Sidebar, Navbar, ToastComponent, LucideAngularModule],
+  // CORREGIDO: Se removió la duplicidad de ToastComponent en los imports
+  imports: [
+    RouterOutlet, 
+    Sidebar, 
+    Navbar, 
+    ToastComponent, 
+    LucideAngularModule
+  ],
   template: `
     <div class="flex h-screen overflow-hidden" style="background:var(--bg)">
 
@@ -25,6 +33,7 @@ import { LucideAngularModule, Menu } from 'lucide-angular';
 
       <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
         <app-navbar (toggleSidebar)="sidebarOpen.set(!sidebarOpen())"></app-navbar>
+        
         <main class="flex-1 overflow-y-auto">
           <router-outlet></router-outlet>
         </main>
@@ -32,10 +41,12 @@ import { LucideAngularModule, Menu } from 'lucide-angular';
 
     </div>
 
-    <!-- Toast global -->
     <app-toast></app-toast>
   `,
 })
 export class MainLayout {
   sidebarOpen = signal(false);
+
+  // Al inyectarlo aquí en el layout principal, el WebSocket se conecta de inmediato y queda en escucha
+  private ticketEvents = inject(TicketEventsService);
 }

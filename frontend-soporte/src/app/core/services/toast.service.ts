@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject, NgZone } from '@angular/core';
 
 export interface Toast {
   id: number;
@@ -11,11 +11,18 @@ export class ToastService {
   private _toasts = signal<Toast[]>([]);
   toasts = this._toasts.asReadonly();
   private nextId = 0;
+  
+  // Inyectamos NgZone para forzar la sincronización en llamadas asíncronas / sondeo
+  private zone = inject(NgZone);
 
   show(mensaje: string, tipo: Toast['tipo'] = 'success', duracion = 3500) {
-    const id = this.nextId++;
-    this._toasts.update(t => [...t, { id, mensaje, tipo }]);
-    setTimeout(() => this.remove(id), duracion);
+    // Forzamos la ejecución dentro de la zona activa de Angular
+    this.zone.run(() => {
+      const id = this.nextId++;
+      this._toasts.update(t => [...t, { id, mensaje, tipo }]);
+      
+      setTimeout(() => this.remove(id), duracion);
+    });
   }
 
   success(msg: string) { this.show(msg, 'success'); }
@@ -23,6 +30,8 @@ export class ToastService {
   info(msg: string)    { this.show(msg, 'info'); }
 
   remove(id: number) {
-    this._toasts.update(t => t.filter(x => x.id !== id));
+    this.zone.run(() => {
+      this._toasts.update(t => t.filter(x => x.id !== id));
+    });
   }
 }

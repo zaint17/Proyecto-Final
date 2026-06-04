@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ToastService } from '../services/toast.service';
+import { ToastService, Toast } from '../services/toast.service';
 import { LucideAngularModule, CheckCircle2, XCircle, Info, X } from 'lucide-angular';
 
 @Component({
@@ -50,7 +50,15 @@ export class ToastComponent {
 
   constructor(public toastService: ToastService) {}
 
-  bg(tipo: string)     { return tipo === 'success' ? '#0f2a1a' : tipo === 'error' ? '#2a0f0f' : '#0f1a2a'; }
-  border(tipo: string) { return tipo === 'success' ? '1px solid #22C55E40' : tipo === 'error' ? '1px solid #EF444440' : '1px solid #4F7EFF40'; }
-  color(tipo: string)  { return tipo === 'success' ? '#86EFAC' : tipo === 'error' ? '#FCA5A5' : '#93BBFD'; }
+  bg(tipo: Toast['tipo']): string { 
+    return tipo === 'success' ? '#062312' : tipo === 'error' ? '#2a0f0f' : '#0f1a2a'; 
+  }
+  
+  border(tipo: Toast['tipo']): string { 
+    return tipo === 'success' ? '1px solid #14532d' : tipo === 'error' ? '1px solid #EF444440' : '1px solid #4F7EFF40'; 
+  }
+  
+  color(tipo: Toast['tipo']): string { 
+    return tipo === 'success' ? '#4ade80' : tipo === 'error' ? '#FCA5A5' : '#93BBFD'; 
+  }
 }

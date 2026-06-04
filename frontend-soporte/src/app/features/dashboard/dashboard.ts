@@ -12,7 +12,7 @@ import {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink,LucideAngularModule],
+  imports: [RouterLink, LucideAngularModule],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit, OnDestroy {
@@ -30,7 +30,9 @@ export class Dashboard implements OnInit, OnDestroy {
   total      = computed(() => this.tickets().length);
   abiertos   = computed(() => this.tickets().filter(t => t.estado === 'Abierto').length);
   enProgreso = computed(() => this.tickets().filter(t => t.estado.trim().toLowerCase() === 'en progreso').length);
-  resueltos  = computed(() => this.tickets().filter(t => t.estado === 'Resuelto' || t.estado === 'Cerrado').length);
+  
+  // Modificación 5: Se consolidan los tickets históricos bajo el estado unificado Cerrado
+  cerrados   = computed(() => this.tickets().filter(t => t.estado === 'Cerrado' || t.estado === 'Cerrado').length);
 
   alta  = computed(() => this.tickets().filter(t => t.prioridad === 'Alta').length);
   media = computed(() => this.tickets().filter(t => t.prioridad === 'Media').length);
@@ -52,7 +54,6 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cargar();
-    // Se recarga automáticamente cada vez que se crea un ticket
     this.sub = this.ticketEvents.ticketCreado$.subscribe(() => this.cargar());
   }
 
@@ -69,16 +70,16 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   chipClass(estado: string): string {
+    const key = estado.trim().toLowerCase();
 
-  const key = estado.trim().toLowerCase();
+    // Homologamos "resuelto" a "closed" para corregir los registros antiguos visualmente en caliente
+    const m: Record<string, string> = {
+      'abierto': 'open',
+      'en progreso': 'progress',
+      'resuelto': 'closed', 
+      'cerrado': 'closed'
+    };
 
-  const m: Record<string, string> = {
-    'abierto': 'open',
-    'en progreso': 'progress',
-    'resuelto': 'resolved',
-    'cerrado': 'closed'
-  };
-
-  return 'chip ' + (m[key] ?? 'closed');
-}
+    return 'chip ' + (m[key] ?? 'closed');
+  }
 }

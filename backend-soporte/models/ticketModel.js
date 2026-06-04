@@ -1,6 +1,5 @@
 const db = require("../config/db");
 
-// Listar tickets asignados a un técnico específico
 const getTicketsPorTecnico = async (tecnico_id) => {
   const result = await db.query(`
     SELECT
@@ -28,7 +27,6 @@ const getTicketsPorTecnico = async (tecnico_id) => {
   return result.rows;
 };
 
-// Listar todos los tickets
 const getTickets = async () => {
   const result = await db.query(`
     SELECT
@@ -55,7 +53,6 @@ const getTickets = async () => {
   return result.rows;
 };
 
-// Obtener ticket por id (simple)
 const getTicketById = async (id) => {
   const result = await db.query(
     "SELECT * FROM tickets WHERE id = $1",
@@ -64,7 +61,6 @@ const getTicketById = async (id) => {
   return result.rows[0] || null;
 };
 
-// Obtener ticket con joins completos (detalle)
 const getTicketDetalle = async (id) => {
   const result = await db.query(`
     SELECT
@@ -96,7 +92,6 @@ const getTicketDetalle = async (id) => {
   return result.rows[0] || null;
 };
 
-// Crear ticket con prioridad automática y fecha límite
 const createTicket = async (ticket) => {
   const {
     titulo,
@@ -110,13 +105,11 @@ const createTicket = async (ticket) => {
     video_url = null,
   } = ticket;
 
-  // Prioridad automática según día de semana
-  const dia = new Date().getDay(); // 0=dom, 1=lun ... 6=sab
-  let prioridad_id = 1;            // Baja por defecto (lun-mar)
-  if (dia >= 3 && dia <= 4) prioridad_id = 2; // Media (mié-jue)
-  if (dia >= 5 || dia === 0) prioridad_id = 3; // Alta (vie-sab-dom)
+  const dia = new Date().getDay();
+  let prioridad_id = 1;         
+  if (dia >= 3 && dia <= 4) prioridad_id = 2;
+  if (dia >= 5 || dia === 0) prioridad_id = 3;
 
-  // Fecha límite: 5 días hábiles
   const fechaLimite = new Date();
   fechaLimite.setDate(fechaLimite.getDate() + 5);
 
@@ -141,9 +134,7 @@ const createTicket = async (ticket) => {
   return result.rows[0];
 };
 
-// ── AGREGADO: Asignar un técnico y actualizar estado si estaba abierto ──
 const asignarTecnico = async (ticket_id, tecnico_id) => {
-  // Primero validamos si el usuario existe y tiene el rol correcto (técnico = 2)
   const tecnico = await db.query(
     "SELECT id FROM usuarios WHERE id = $1 AND rol_id = 2",
     [tecnico_id]
@@ -163,7 +154,6 @@ const asignarTecnico = async (ticket_id, tecnico_id) => {
   return result.rows[0] || null;
 };
 
-// ── AGREGADO: Cambiar únicamente el estado del ticket ──
 const cambiarEstado = async (ticket_id, estado_id) => {
   const result = await db.query(`
     UPDATE tickets
@@ -176,6 +166,23 @@ const cambiarEstado = async (ticket_id, estado_id) => {
   return result.rows[0] || null;
 };
 
+// ── CORREGIDO CON DATOS REALES DE PGADMIN ──
+const actualizarVideoUrl = async (ticket_id, video_url, tipo, usuario_id) => {
+  if (tipo === 'entrada') {
+    return await db.query(
+      "UPDATE tickets SET video_url = $1, fecha_actualizacion = NOW() WHERE id = $2 RETURNING *",
+      [video_url, ticket_id]
+    );
+  } else {
+    // ✅ COLUMNA CORRECTA: 'fecha' en lugar de 'fecha_creacion'
+    return await db.query(`
+      INSERT INTO ticket_respuestas (ticket_id, usuario_id, mensaje, fecha)
+      VALUES ($1, $2, $3, NOW()) RETURNING *`,
+      [ticket_id, usuario_id, `[EVIDENCIA DE SALIDA] Video adjunto: ${video_url}`]
+    );
+  }
+};
+
 const registrarNotificacion = async (ticket_id, mensaje) => {
   const result = await db.query(`
     INSERT INTO historial_notificaciones (ticket_id, mensaje)
@@ -186,7 +193,6 @@ const registrarNotificacion = async (ticket_id, mensaje) => {
   return result.rows[0];
 };
 
-// También necesitamos una función para listar el historial de un ticket
 const getHistorialNotificaciones = async (ticket_id) => {
   const result = await db.query(`
     SELECT id, tipo_notificacion, mensaje, fecha_envio 
@@ -215,7 +221,6 @@ const getTodosHistorialNotificaciones = async () => {
   return result.rows;
 };
 
-
 module.exports = { 
   getTickets, 
   getTicketById, 
@@ -224,6 +229,7 @@ module.exports = {
   getTicketsPorTecnico,
   asignarTecnico,
   cambiarEstado,
+  actualizarVideoUrl,
   registrarNotificacion,
   getHistorialNotificaciones,
   getTodosHistorialNotificaciones

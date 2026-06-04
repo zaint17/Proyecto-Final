@@ -45,22 +45,18 @@ export class TicketService {
 
   constructor(private http: HttpClient) {}
 
-  // Listar todos
   getTickets() {
     return this.http.get<{ data: Ticket[]; total: number }>(this.url);
   }
 
-  // Detalle completo
   getDetalle(id: number) {
     return this.http.get<{ data: TicketDetalle }>(`${this.url}/${id}/detalle`);
   }
 
-  // Crear
   crear(dto: CrearTicketDto) {
     return this.http.post<{ data: Ticket; message: string }>(this.url, dto);
   }
 
-  // Asignar técnico (solo admin)
   asignarTecnico(ticketId: number, tecnico_id: number) {
     return this.http.put<{ data: Ticket; message: string }>(
       `${this.url}/${ticketId}/asignar`,
@@ -68,7 +64,6 @@ export class TicketService {
     );
   }
 
-  // Cambiar estado
   cambiarEstado(ticketId: number, estado_id: number) {
     return this.http.put<{ data: Ticket; message: string }>(
       `${this.url}/${ticketId}/estado`,
@@ -76,19 +71,28 @@ export class TicketService {
     );
   }
 
-  // Obtener ticket por ID (Simple)
   getTicketById(id: number) {
     return this.http.get<{ data: Ticket }>(
       `${this.url}/${id}`
     );
   }
 
-  // Registrar el envío en el historial
+  // NUEVO: Envío del archivo de video como binario Multipart
+  subirVideoLocal(ticketId: number, file: File, tipo: 'entrada' | 'salida') {
+    const formData = new FormData();
+    formData.append('video', file);
+    formData.append('tipo', tipo);
+
+    return this.http.post<{ data: { video_url: string }; message: string }>(
+      `${this.url}/${ticketId}/upload-video`, 
+      formData
+    );
+  }
+
   registrarNotificacion(ticketId: number, mensaje: string) {
     return this.http.post(`${this.url}/${ticketId}/notificar`, { mensaje });
   }
 
-  // Obtener el historial para pintarlo en la vista de detalles
   getHistorialNotificaciones(ticketId: number) {
     return this.http.get<{ data: any[] }>(
       `${this.url}/${ticketId}/notificaciones`

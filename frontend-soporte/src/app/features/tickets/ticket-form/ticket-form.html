@@ -1,6 +1,5 @@
 <div class="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
 
-  <!-- Header -->
   <div class="flex items-center gap-3 mb-6">
     <a routerLink="/app/tickets" class="btn-ghost p-2">
       <lucide-icon [img]="ArrowLeft" size="15" aria-hidden="true"></lucide-icon>
@@ -20,7 +19,6 @@
 
   <div class="flex flex-col gap-4">
 
-    <!-- Datos del ticket -->
     <div class="card">
       <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
         <lucide-icon [img]="FileText" size="14" aria-hidden="true" style="color:var(--accent)"></lucide-icon>
@@ -51,14 +49,13 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs mb-1.5" style="color:var(--muted)">URL de video (opcional)</label>
-            <input type="url" [(ngModel)]="form.video_url" class="input-base" placeholder="https://youtube.com/..." />
+            <label class="block text-xs mb-1.5" style="color:var(--muted)">Evidencia de Entrada (Video Local)</label>
+            <input type="file" accept="video/mp4" (change)="onVideoEntradaSelected($event)" class="input-base text-sm" />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Datos del cliente -->
     <div class="card">
       <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
         <lucide-icon [img]="User" size="14" aria-hidden="true" style="color:var(--purple)"></lucide-icon>
@@ -91,7 +88,6 @@
       </div>
     </div>
 
-    <!-- Acciones -->
     <div class="flex gap-3">
       <button (click)="guardar()" [disabled]="cargando()" class="btn-primary flex-1 sm:flex-none justify-center">
         <lucide-icon [img]="Save" size="14" aria-hidden="true"></lucide-icon>

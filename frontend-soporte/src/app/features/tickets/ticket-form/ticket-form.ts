@@ -27,12 +27,15 @@ export class TicketForm implements OnInit {
   categorias = signal<Categoria[]>([]);
   cargando   = signal(false);
   error      = signal('');
+  
+  // Guardar archivo físico capturado en el input de Entrada
+  videoEntradaFile = signal<File | null>(null);
 
   form = {
     titulo: '', descripcion: '',
     cliente_nombre: '', cliente_dni: '',
     cliente_telefono: '', cliente_direccion: '',
-    cliente_email: '', categoria_id: 0, video_url: '',
+    cliente_email: '', categoria_id: 0
   };
 
   constructor(
@@ -53,25 +56,54 @@ export class TicketForm implements OnInit {
     });
   }
 
+  onVideoEntradaSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.videoEntradaFile.set(file);
+    }
+  }
+
   guardar() {
     if (!this.form.titulo || !this.form.descripcion ||
-        !this.form.cliente_nombre || !this.form.categoria_id) {
+        !this.form.cliente_nombre || !Number(this.form.categoria_id)) {
       this.error.set('Completa los campos obligatorios (*).');
       return;
     }
     this.cargando.set(true);
     this.error.set('');
 
+    // Paso 1: Crear la entidad del ticket
     this.ticketService.crear({ ...this.form, categoria_id: Number(this.form.categoria_id) }).subscribe({
-      next: () => {
-        this.ticketEvents.emitirTicketCreado(); // ← notifica al dashboard
-        this.toast.success('Ticket creado correctamente');
-        this.router.navigate(['/app/tickets']);
+      next: (res: any) => {
+        const ticketId = res.data.id;
+        const file = this.videoEntradaFile();
+
+        // Paso 2: Si el operador cargó un archivo binario, lo subimos enlazándolo al ID obtenido
+        if (file) {
+          this.ticketService.subirVideoLocal(ticketId, file, 'entrada' as any).subscribe({
+            next: () => {
+              this.finalizarCreacion();
+            },
+            error: () => {
+              this.cargando.set(false);
+              this.toast.error('Ticket creado, pero la evidencia multimedia local falló al guardarse.');
+              this.router.navigate(['/app/tickets']);
+            }
+          });
+        } else {
+          this.finalizarCreacion();
+        }
       },
       error: err => {
         this.cargando.set(false);
         this.error.set(err.error?.error || 'Error al crear el ticket.');
       }
     });
+  }
+
+  private finalizarCreacion() {
+    this.ticketEvents.emitirTicketCreado(); 
+    this.toast.success('Ticket creado correctamente con evidencia de entrada.');
+    this.router.navigate(['/app/tickets']);
   }
 }

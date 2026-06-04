@@ -11,157 +11,162 @@
   </div>
 
   @if (cargando()) {
-  <div class="text-center py-20" style="color:var(--muted)">Cargando estadísticas...</div>
+    <div class="text-center py-20" style="color:var(--muted)">Cargando estadísticas...</div>
   }
 
   @if (!cargando()) {
 
-  <!-- Stats: 2 cols en móvil, 4 en desktop -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <!-- Stats: Remodelado a 4 columnas limpias con foco en Cerrados -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="stat-card accent-blue">
-      <div class="stat-label">
-        <lucide-icon [img]="TicketIcon" size="12" aria-hidden="true"></lucide-icon>
-        <span class="hidden sm:inline">Total</span> Tickets
-      </div>
-      <div class="stat-value text-2xl sm:text-3xl" style="color:var(--accent)">{{ total() }}</div>
-      <div class="stat-sub hidden sm:block" style="color:var(--muted)">En el sistema</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">
-        <lucide-icon [img]="AlertCircle" size="12" aria-hidden="true"></lucide-icon>
-        Abiertos
-      </div>
-      <div class="stat-value text-2xl sm:text-3xl" style="color:#EF4444">{{ abiertos() }}</div>
-      <div class="stat-sub hidden sm:block" style="color:#FCA5A5">Requieren atención</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">
-        <lucide-icon [img]="Clock" size="12" aria-hidden="true"></lucide-icon>
-        <span class="hidden sm:inline">En </span>Progreso
-      </div>
-      <div class="stat-value text-2xl sm:text-3xl" style="color:#F59E0B">{{ enProgreso() }}</div>
-      <div class="stat-sub hidden sm:block" style="color:#FCD34D">En atención</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">
-        <lucide-icon [img]="CheckCircle2" size="12" aria-hidden="true"></lucide-icon>
-        Resueltos
-      </div>
-      <div class="stat-value text-2xl sm:text-3xl" style="color:#22C55E">{{ resueltos() }}</div>
-      <div class="stat-sub hidden sm:block" style="color:#86EFAC">
-        @if (total()) { {{ Math.round(resueltos() / total() * 100) }}% éxito }
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Grid: tabla + panel — apilado en móvil, lado a lado en xl -->
-  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5">
-
-    <!-- Tabla tickets recientes -->
-    <div class="xl:col-span-2 card p-0 overflow-hidden">
-      <div class="flex justify-between items-center px-4 sm:px-5 py-4" style="border-bottom:1px solid var(--border)">
-        <h2 class="text-sm font-semibold">Tickets recientes</h2>
-        <a routerLink="/app/tickets" class="text-xs flex items-center gap-1"
-          style="color:var(--accent);text-decoration:none">
-          Ver todos
-          <lucide-icon [img]="ArrowRight" size="11" aria-hidden="true"></lucide-icon>
-        </a>
-      </div>
-
-      <!-- Tabla solo en sm+ -->
-      <div class="hidden sm:block overflow-x-auto">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Título</th>
-              <th>Cliente</th>
-              <th>Estado</th>
-              <th>Prioridad</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (t of recientes(); track t.id) {
-            <tr [routerLink]="['/app/tickets', t.id]">
-              <td style="color:var(--muted);font-size:12px">#{{ t.id }}</td>
-              <td>
-                <div class="font-medium truncate" style="max-width:180px">{{ t.titulo }}</div>
-              </td>
-              <td style="color:var(--muted);font-size:12px">{{ t.cliente }}</td>
-              <td><span [class]="chipClass(t.estado)"><span class="chip-dot"></span>{{ t.estado }}</span></td>
-              <td><span class="prio {{t.prioridad.toLowerCase()}}">{{ t.prioridad }}</span></td>
-            </tr>
-            }
-            @if (recientes().length === 0) {
-            <tr>
-              <td colspan="5" class="text-center py-10" style="color:var(--muted)">Sin tickets</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Lista en móvil -->
-      <div class="sm:hidden divide-y" style="border-color:var(--border)">
-        @for (t of recientes(); track t.id) {
-        <div class="px-4 py-3 flex items-center gap-3" [routerLink]="['/app/tickets', t.id]" style="cursor:pointer">
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium truncate">{{ t.titulo }}</div>
-            <div class="text-xs mt-0.5" style="color:var(--muted)">{{ t.cliente }}</div>
-          </div>
-          <span [class]="chipClass(t.estado)"><span class="chip-dot"></span>{{ t.estado }}</span>
+      <div class="stat-card accent-blue">
+        <div class="stat-label">
+          <lucide-icon [img]="TicketIcon" size="12" aria-hidden="true"></lucide-icon>
+          <span class="hidden sm:inline">Total</span> Tickets
         </div>
-        }
-        @if (recientes().length === 0) {
-        <div class="text-center py-8 text-sm" style="color:var(--muted)">Sin tickets</div>
-        }
+        <div class="stat-value text-2xl sm:text-3xl" style="color:var(--accent)">{{ total() }}</div>
+        <div class="stat-sub hidden sm:block" style="color:var(--muted)">En el sistema</div>
       </div>
-    </div>
 
-    <!-- Panel lateral -->
-    <div class="flex flex-col gap-4">
-
-      <!-- Prioridades -->
-      <div class="card">
-        <h3 class="text-xs font-semibold mb-4" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">
-          Por prioridad
-        </h3>
-        @for (p of [{label:'Alta',val:alta(),pct:pctAlta(),color:'#EF4444'},
-        {label:'Media',val:media(),pct:pctMedia(),color:'#F59E0B'},
-        {label:'Baja',val:baja(),pct:pctBaja(),color:'#22C55E'}]; track p.label) {
-        <div class="mb-3 last:mb-0">
-          <div class="flex justify-between text-xs mb-1">
-            <span>{{ p.label }}</span>
-            <span style="color:var(--muted)">{{ p.val }}</span>
-          </div>
-          <div class="h-1.5 rounded-full" style="background:var(--bg4)">
-            <div class="h-full rounded-full transition-all duration-500" [style.width.%]="p.pct"
-              [style.background]="p.color"></div>
-          </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <lucide-icon [img]="AlertCircle" size="12" aria-hidden="true"></lucide-icon>
+          Abiertos
         </div>
-        }
+        <div class="stat-value text-2xl sm:text-3xl" style="color:#EF4444">{{ abiertos() }}</div>
+        <div class="stat-sub hidden sm:block" style="color:#FCA5A5">Requieren atención</div>
       </div>
 
-      <!-- Acceso rápido admin -->
-      @if (auth.esAdmin()) {
-      <div class="card">
-        <h3 class="text-xs font-semibold mb-3" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">
-          Acceso rápido
-        </h3>
-        <a routerLink="/app/tickets/nuevo" class="btn-primary w-full justify-center">
-          <lucide-icon [img]="TicketIcon" size="13" aria-hidden="true"></lucide-icon>
-          Crear ticket
-        </a>
+      <div class="stat-card">
+        <div class="stat-label">
+          <lucide-icon [img]="Clock" size="12" aria-hidden="true"></lucide-icon>
+          <span class="hidden sm:inline">En </span>Progreso
+        </div>
+        <div class="stat-value text-2xl sm:text-3xl" style="color:#F59E0B">{{ enProgreso() }}</div>
+        <div class="stat-sub hidden sm:block" style="color:#FCD34D">En atención</div>
       </div>
-      }
+
+      <!-- Cambiado de Resueltos a Cerrados con color Verde de Éxito -->
+      <div class="stat-card">
+        <div class="stat-label">
+          <lucide-icon [img]="CheckCircle2" size="12" aria-hidden="true"></lucide-icon>
+          Cerrados
+        </div>
+        <div class="stat-value text-2xl sm:text-3xl" style="color:#22C55E">{{ cerrados() }}</div>
+        <div class="stat-sub hidden sm:block" style="color:#86EFAC">
+          @if (total()) { {{ Math.round(cerrados() / total() * 100) }}% completado }
+        </div>
+      </div>
 
     </div>
-  </div>
+
+    <!-- Grid: tabla + panel -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5">
+
+      <!-- Tabla tickets recientes -->
+      <div class="xl:col-span-2 card p-0 overflow-hidden">
+        <div class="flex justify-between items-center px-4 sm:px-5 py-4" style="border-bottom:1px solid var(--border)">
+          <h2 class="text-sm font-semibold">Tickets recientes</h2>
+          <a routerLink="/app/tickets" class="text-xs flex items-center gap-1"
+            style="color:var(--accent);text-decoration:none">
+            Ver todos
+            <lucide-icon [img]="ArrowRight" size="11" aria-hidden="true"></lucide-icon>
+          </a>
+        </div>
+
+        <!-- Tabla Desktop -->
+        <div class="hidden sm:block overflow-x-auto">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Título</th>
+                <th>Cliente</th>
+                <th>Estado</th>
+                <th>Prioridad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of recientes(); track t.id) {
+                <tr [routerLink]="['/app/tickets', t.id]">
+                  <td style="color:var(--muted);font-size:12px">#{{ t.id }}</td>
+                  <td>
+                    <div class="font-medium truncate" style="max-width:180px">{{ t.titulo }}</div>
+                  </td>
+                  <td style="color:var(--muted);font-size:12px">{{ t.cliente }}</td>
+                  <td>
+                    <span [class]="chipClass(t.estado)">
+                      <span class="chip-dot"></span>{{ t.estado }}
+                    </span>
+                  </td>
+                  <td><span class="prio {{t.prioridad.toLowerCase()}}">{{ t.prioridad }}</span></td>
+                </tr>
+              }
+              @if (recientes().length === 0) {
+                <tr>
+                  <td colspan="5" class="text-center py-10" style="color:var(--muted)">Sin tickets</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Lista Móvil -->
+        <div class="sm:hidden divide-y" style="border-color:var(--border)">
+          @for (t of recientes(); track t.id) {
+            <div class="px-4 py-3 flex items-center gap-3" [routerLink]="['/app/tickets', t.id]" style="cursor:pointer">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium truncate">{{ t.titulo }}</div>
+                <div class="text-xs mt-0.5" style="color:var(--muted)">{{ t.cliente }}</div>
+              </div>
+              <span [class]="chipClass(t.estado)"><span class="chip-dot"></span>{{ t.estado }}</span>
+            </div>
+          }
+          @if (recientes().length === 0) {
+            <div class="text-center py-8 text-sm" style="color:var(--muted)">Sin tickets</div>
+          }
+        </div>
+      </div>
+
+      <!-- Panel lateral -->
+      <div class="flex flex-col gap-4">
+
+        <!-- Prioridades -->
+        <div class="card">
+          <h3 class="text-xs font-semibold mb-4" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">
+            Por prioridad
+          </h3>
+          @for (p of [{label:'Alta',val:alta(),pct:pctAlta(),color:'#EF4444'},
+                    {label:'Media',val:media(),pct:pctMedia(),color:'#F59E0B'},
+                    {label:'Baja',val:baja(),pct:pctBaja(),color:'#22C55E'}]; track p.label) {
+            <div class="mb-3 last:mb-0">
+              <div class="flex justify-between text-xs mb-1">
+                <span>{{ p.label }}</span>
+                <span style="color:var(--muted)">{{ p.val }}</span>
+              </div>
+              <div class="h-1.5 rounded-full" style="background:var(--bg4)">
+                <div class="h-full rounded-full transition-all duration-500" [style.width.%]="p.pct"
+                  [style.background]="p.color"></div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Acceso rápido admin -->
+        @if (auth.esAdmin()) {
+          <div class="card">
+            <h3 class="text-xs font-semibold mb-3" style="color:var(--muted);text-transform:uppercase;letter-spacing:.6px">
+              Acceso rápido
+            </h3>
+            <a routerLink="/app/tickets/nuevo" class="btn-primary w-full justify-center">
+              <lucide-icon [img]="TicketIcon" size="13" aria-hidden="true"></lucide-icon>
+              Crear ticket
+            </a>
+          </div>
+        }
+
+      </div>
+    </div>
 
   }
 </div>
