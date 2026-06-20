@@ -1,20 +1,20 @@
 require("dotenv").config();
 const { Pool } = require("pg");
 
+// Configuración adaptada para producción con la URI de Supabase
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT) || 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Requerido obligatoriamente por Supabase para conexiones SSL seguras
+  }
 });
 
 // Verificar conexión al iniciar
 pool.connect((err, client, release) => {
   if (err) {
-    console.error("❌ Error conectando a PostgreSQL:", err.message);
+    console.error("❌ Error conectando a PostgreSQL (Supabase):", err.message);
   } else {
-    console.log("✅ Conectado a PostgreSQL:", process.env.DB_NAME);
+    console.log("✅ Conectado exitosamente a PostgreSQL en la nube.");
     release();
   }
 });
