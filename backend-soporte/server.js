@@ -11,9 +11,12 @@ const ticketController = require("./controllers/ticketController");
 const app = express();
 const server = http.createServer(app); // Creamos el servidor HTTP envolviendo a express
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
+// ── CORS MODIFICADO ──────────────────────────────────────────────────────────
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:4200",
+  origin: [
+    "http://localhost:4200",
+    "https://frontend-soporte-eosin.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
